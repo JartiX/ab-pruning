@@ -1,3 +1,5 @@
+import pygame
+import sys
 import random
 import time
 
@@ -188,46 +190,142 @@ class Board:
         return board_str + "\n" + "|" + "|".join(map(str, range(1, self.cols + 1))) + "|"
 
 
+pygame.init()
+
+# Константы для интерфейса
+CELL_SIZE = 100
+MARGIN = 10
+WIDTH = 7 * CELL_SIZE
+HEIGHT = 6 * CELL_SIZE
+RADIUS = CELL_SIZE // 2 - MARGIN
+
+# Цвета
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+BLUE = (0, 0, 255)
+
+WINDOW_HEIGHT = HEIGHT + CELL_SIZE
+screen = pygame.display.set_mode((WIDTH, WINDOW_HEIGHT))
+pygame.display.set_caption("4 в ряд")
+
+
+def draw_board(board_obj):
+    """Отображение доски и фишек"""
+    screen.fill(BLACK)
+
+    for col in range(board_obj.cols):
+        for row in range(board_obj.rows):
+            pygame.draw.rect(screen, BLUE, (col * CELL_SIZE,
+                             row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+            pygame.draw.circle(screen, BLACK, (col * CELL_SIZE +
+                               CELL_SIZE // 2, row * CELL_SIZE + CELL_SIZE // 2), RADIUS)
+
+            if board_obj.board[col][row] == 1:
+                pygame.draw.circle(screen, RED, (col * CELL_SIZE + CELL_SIZE //
+                                   2, row * CELL_SIZE + CELL_SIZE // 2), RADIUS)
+            elif board_obj.board[col][row] == 2:
+                pygame.draw.circle(screen, YELLOW, (col * CELL_SIZE +
+                                   CELL_SIZE // 2, row * CELL_SIZE + CELL_SIZE // 2), RADIUS)
+    pygame.display.flip()
+
+
+def draw_restart_button():
+    font = pygame.font.Font(None, 36)
+    text = font.render("Restart", True, WHITE)
+    button_rect = pygame.Rect(
+        WIDTH // 2 - 75, HEIGHT + CELL_SIZE // 4, 150, 40)
+    pygame.draw.rect(screen, RED, button_rect)
+    screen.blit(text, (button_rect.x + 25, button_rect.y + 5))
+    return button_rect
+
+
+def draw_current_turn(player_turn):
+    """Отображение информации о текущем ходе"""
+    font = pygame.font.Font(None, 36)
+
+    if player_turn:
+        text = font.render("Ваш ход", True, WHITE)
+    else:
+        text = font.render("Ход бота", True, WHITE)
+
+    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 10))
+
+
 def main():
     board = Board(7, 6)
+    running = True
+    player_turn = True
+    game_over = False
+    restart_button = None
+    draw_board(board)
+    is_tern_drawn = False
+    while running:
 
-    while True:
-        print(board)
-        move = board.best_move(1, 5)
-        board.drop_coin(1, move)
-        print(f"Бот выбрал {move + 1} столбец")
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-        if board.winner == 1:
-            print("Бот победил!")
-            break
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
 
-        if board.is_full:
-            print("Ничья!")
-            break
+                # Если игра окончена, проверяем нажатие на кнопку
+                if game_over and restart_button:
+                    if restart_button.collidepoint(mouse_pos):
+                        board = Board(7, 6)
+                        player_turn = True
+                        game_over = False
+                        restart_button = None
+                        draw_board(board)
+                        continue
 
-        print(board)
+                # Если игра не окончена, обрабатываем клики только на игровом поле
+                if not game_over:
+                    if mouse_pos[1] < HEIGHT:  # Ограничиваем область игровым полем
+                        is_tern_drawn = False
+                        x_pos = mouse_pos[0]
+                        col = x_pos // CELL_SIZE
+                        if board.column_free(col):
+                            board.drop_coin(2, col)
+                            draw_board(board)
+                            if board.winner == 2:
+                                print("Вы победили!")
+                                draw_board(board)
+                                game_over = True
+                            elif board.is_full:
+                                print("Ничья!")
+                                draw_board(board)
+                                game_over = True
+                            player_turn = False
+                            break
+        if not game_over and not is_tern_drawn:
+            draw_current_turn(player_turn)
+            pygame.display.flip()
+            is_tern_drawn = True
 
-        while True:
-            try:
-                player_move = int(input("Ваш ход (1-7): ")) - 1
-                if 0 <= player_move < board.cols and board.column_free(player_move):
-                    break
-                print("Невозможный ход.")
-            except ValueError:
-                print("Введите число.")
+        if not player_turn and not game_over:
+            bot_move = board.best_move(1, 1)
+            board.drop_coin(1, bot_move)
+            draw_board(board)
+            is_tern_drawn = False
+            if board.winner == 1:
+                print("Бот победил!")
+                draw_board(board)
+                game_over = True
+            elif board.is_full:
+                print("Ничья!")
+                draw_board(board)
+                game_over = True
+            player_turn = True
 
-        board.drop_coin(2, player_move)
+        if game_over and not restart_button:
+            restart_button = draw_restart_button()
 
-        if board.winner == 2:
-            print("Вы победили!")
-            break
+        pygame.display.flip()
 
-        if board.is_full:
-            print("Ничья!")
-            break
-
-    print("Игры окончена!")
-    print(board)
+    pygame.quit()
+    sys.exit()
 
 
 if __name__ == "__main__":
