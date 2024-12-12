@@ -10,6 +10,7 @@ class Board:
     board: list[list] = None
     __winner: int | None = None
     __changed: bool = None
+    winning_cells: list[tuple] = None
 
     def __init__(self, cols, rows):
         self.cols = cols
@@ -17,6 +18,7 @@ class Board:
         self.board = [[None for _ in range(rows)] for _ in range(cols)]
         self.__winner = None
         self.__changed = True
+        self.winning_cells = []
 
     def column_free(self, column):
         return self.board[column][0] is None
@@ -144,6 +146,7 @@ class Board:
             return self.__winner
 
         self.__changed = False
+        self.winning_cells = []
         for col in range(self.cols):
             for row in range(self.rows):
                 for seq_type in ["horizontal", "vertical", "diagonal", "reverse_diagonal"]:
@@ -168,9 +171,14 @@ class Board:
         dc, dr = deltas[seq_type]
 
         try:
+            winning_cells = [(col, row)]
             for k in range(1, 4):
-                if self.board[col + k * dc][row + k * dr] != player_id:
+                c, r = col + k * dc, row + k * dr
+                if self.board[c][r] == player_id:
+                    winning_cells.append((c, r))
+                else:
                     return False
+            self.winning_cells = winning_cells
             return True
         except IndexError:
             return False
@@ -192,42 +200,54 @@ class Board:
 
 pygame.init()
 
-# Константы для интерфейса
 CELL_SIZE = 100
 MARGIN = 10
 WIDTH = 7 * CELL_SIZE
 HEIGHT = 6 * CELL_SIZE
 RADIUS = CELL_SIZE // 2 - MARGIN
 
-# Цвета
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
+LIGHT_BLUE = (58, 166, 208)
 BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
 
-WINDOW_HEIGHT = HEIGHT + CELL_SIZE
+WINDOW_HEIGHT = HEIGHT
 screen = pygame.display.set_mode((WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("4 в ряд")
 
 
 def draw_board(board_obj):
-    """Отображение доски и фишек"""
     screen.fill(BLACK)
 
     for col in range(board_obj.cols):
         for row in range(board_obj.rows):
-            pygame.draw.rect(screen, BLUE, (col * CELL_SIZE,
+            pygame.draw.rect(screen, LIGHT_BLUE, (col * CELL_SIZE,
                              row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-            pygame.draw.circle(screen, BLACK, (col * CELL_SIZE +
+            pygame.draw.circle(screen, WHITE, (col * CELL_SIZE +
                                CELL_SIZE // 2, row * CELL_SIZE + CELL_SIZE // 2), RADIUS)
 
             if board_obj.board[col][row] == 1:
                 pygame.draw.circle(screen, RED, (col * CELL_SIZE + CELL_SIZE //
                                    2, row * CELL_SIZE + CELL_SIZE // 2), RADIUS)
             elif board_obj.board[col][row] == 2:
-                pygame.draw.circle(screen, YELLOW, (col * CELL_SIZE +
+                pygame.draw.circle(screen, BLUE, (col * CELL_SIZE +
                                    CELL_SIZE // 2, row * CELL_SIZE + CELL_SIZE // 2), RADIUS)
+
+    if board_obj.winning_cells:
+        winner = board_obj.winner
+        color = RED if winner == 1 else BLUE
+        for (col, row) in board_obj.winning_cells:
+            pygame.draw.circle(screen, WHITE,
+                               (col * CELL_SIZE + CELL_SIZE // 2,
+                                row * CELL_SIZE + CELL_SIZE // 2),
+                               RADIUS + 2, width=6)
+            pygame.draw.circle(screen, color,
+                               (col * CELL_SIZE + CELL_SIZE // 2,
+                                row * CELL_SIZE + CELL_SIZE // 2),
+                               RADIUS)
     pygame.display.flip()
 
 
@@ -235,20 +255,31 @@ def draw_restart_button():
     font = pygame.font.Font(None, 36)
     text = font.render("Restart", True, WHITE)
     button_rect = pygame.Rect(
-        WIDTH // 2 - 75, HEIGHT + CELL_SIZE // 4, 150, 40)
+        WIDTH // 2 - 75, 40, 150, 40)
     pygame.draw.rect(screen, RED, button_rect)
     screen.blit(text, (button_rect.x + 25, button_rect.y + 5))
     return button_rect
 
 
 def draw_current_turn(player_turn):
-    """Отображение информации о текущем ходе"""
     font = pygame.font.Font(None, 36)
 
     if player_turn:
-        text = font.render("Ваш ход", True, WHITE)
+        text = font.render("Ваш ход", True, BLACK)
     else:
-        text = font.render("Ход бота", True, WHITE)
+        text = font.render("Ход бота", True, BLACK)
+
+    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 10))
+    
+def draw_winner(player_win):
+    font = pygame.font.Font(None, 36)
+
+    if player_win:
+        text = font.render("Вы победили!", True, BLACK)
+    elif player_win is not None:
+        text = font.render("Вы проиграли...", True, BLACK)
+    else:
+        text = font.render("Ничья", True, BLACK)
 
     screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 10))
 
@@ -282,23 +313,24 @@ def main():
 
                 # Если игра не окончена, обрабатываем клики только на игровом поле
                 if not game_over:
-                    if mouse_pos[1] < HEIGHT:  # Ограничиваем область игровым полем
-                        is_tern_drawn = False
-                        x_pos = mouse_pos[0]
-                        col = x_pos // CELL_SIZE
-                        if board.column_free(col):
-                            board.drop_coin(2, col)
+                    is_tern_drawn = False
+                    x_pos = mouse_pos[0]
+                    col = x_pos // CELL_SIZE
+                    if board.column_free(col):
+                        board.drop_coin(2, col)
+                        draw_board(board)
+                        if board.winner == 2:
+                            print("Вы победили!")
                             draw_board(board)
-                            if board.winner == 2:
-                                print("Вы победили!")
-                                draw_board(board)
-                                game_over = True
-                            elif board.is_full:
-                                print("Ничья!")
-                                draw_board(board)
-                                game_over = True
-                            player_turn = False
-                            break
+                            draw_winner(True)
+                            game_over = True
+                        elif board.is_full:
+                            print("Ничья!")
+                            draw_board(board)
+                            draw_winner(None)
+                            game_over = True
+                        player_turn = False
+                        break
         if not game_over and not is_tern_drawn:
             draw_current_turn(player_turn)
             pygame.display.flip()
@@ -312,10 +344,12 @@ def main():
             if board.winner == 1:
                 print("Бот победил!")
                 draw_board(board)
+                draw_winner(False)
                 game_over = True
             elif board.is_full:
                 print("Ничья!")
                 draw_board(board)
+                draw_winner(None)
                 game_over = True
             player_turn = True
 
