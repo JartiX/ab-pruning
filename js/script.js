@@ -9,11 +9,11 @@ class Board {
         this.winningCells = [];
     }
 
-    columnFree(column) {
+    isColumnFree(column) {
         return this.board[column][0] === null;
     }
 
-    dropCoin(playerId, column) {
+    dropChip(playerId, column) {
         for (let row = this.rows - 1; row >= 0; row--) {
             if (this.board[column][row] === null) {
                 this.board[column][row] = playerId;
@@ -24,7 +24,7 @@ class Board {
         return false;
     }
 
-    removeTopCoin(column) {
+    removeChip(column) {
         for (let row = 0; row < this.rows; row++) {
             if (this.board[column][row] !== null) {
                 this.board[column][row] = null;
@@ -35,7 +35,7 @@ class Board {
         return false;
     }
 
-    scoreSequence(playerId, positions) {
+    rateSequence(playerId, positions) {
         let bot = 0;
         let player = 0;
 
@@ -60,22 +60,22 @@ class Board {
         return 0;
     }
 
-    evaluateSequences(playerId, seqType) {
+    rateSequences(playerId, seqType) {
         let score = 0;
 
         for (let col = 0; col < this.cols; col++) {
             for (let row = 0; row < this.rows; row++) {
                 if (seqType === "horizontal" && col + 3 < this.cols) {
-                    score += this.scoreSequence(playerId, Array.from({ length: 4 }, (_, k) => [col + k, row]));
+                    score += this.rateSequence(playerId, Array.from({ length: 4 }, (_, k) => [col + k, row]));
                 }
                 if (seqType === "vertical" && row + 3 < this.rows) {
-                    score += this.scoreSequence(playerId, Array.from({ length: 4 }, (_, k) => [col, row + k]));
+                    score += this.rateSequence(playerId, Array.from({ length: 4 }, (_, k) => [col, row + k]));
                 }
                 if (seqType === "diagonal" && col + 3 < this.cols && row + 3 < this.rows) {
-                    score += this.scoreSequence(playerId, Array.from({ length: 4 }, (_, k) => [col + k, row + k]));
+                    score += this.rateSequence(playerId, Array.from({ length: 4 }, (_, k) => [col + k, row + k]));
                 }
                 if (seqType === "reverse_diagonal" && col - 3 >= 0 && row + 3 < this.rows) {
-                    score += this.scoreSequence(playerId, Array.from({ length: 4 }, (_, k) => [col - k, row + k]));
+                    score += this.rateSequence(playerId, Array.from({ length: 4 }, (_, k) => [col - k, row + k]));
                 }
             }
         }
@@ -83,10 +83,10 @@ class Board {
         return score;
     }
 
-    evaluateBoard(playerId) {
+    rateBoard(playerId) {
         let score = 0;
         for (const seqType of ["horizontal", "vertical", "diagonal", "reverse_diagonal"]) {
-            score += this.evaluateSequences(playerId, seqType);
+            score += this.rateSequences(playerId, seqType);
         }
         return score;
     }
@@ -104,15 +104,15 @@ class Board {
             return 0;
         }
         if (depth === 0) {
-            return this.evaluateBoard(playerId);
+            return this.rateBoard(playerId);
         }
 
         if (maximizingPlayer) {
             let maxEval = -Infinity;
             for (let col = 0; col < this.cols; col++) {
-                if (!this.dropCoin(playerId, col)) continue;
+                if (!this.dropChip(playerId, col)) continue;
                 const evalue = this.minimax(depth - 1, playerId, false, alpha, beta);
-                this.removeTopCoin(col);
+                this.removeChip(col);
                 maxEval = Math.max(maxEval, evalue);
                 alpha = Math.max(alpha, evalue);
                 if (beta <= alpha) break;
@@ -121,9 +121,9 @@ class Board {
         } else {
             let minEval = Infinity;
             for (let col = 0; col < this.cols; col++) {
-                if (!this.dropCoin(opponentId, col)) continue;
+                if (!this.dropChip(opponentId, col)) continue;
                 const evalue = this.minimax(depth - 1, playerId, true, alpha, beta);
-                this.removeTopCoin(col);
+                this.removeChip(col);
                 minEval = Math.min(minEval, evalue);
                 beta = Math.min(beta, evalue);
                 if (beta <= alpha) break;
@@ -132,14 +132,14 @@ class Board {
         }
     }
 
-    bestMove(playerId, depth) {
+    calculateBestMove(playerId, depth) {
         const moves = [];
 
         for (let col = 0; col < this.cols; col++) {
-            if (!this.dropCoin(playerId, col)) continue;
+            if (!this.dropChip(playerId, col)) continue;
             const score = this.minimax(depth - 1, playerId, false, -Infinity, Infinity);
             moves.push({ column: col, score });
-            this.removeTopCoin(col);
+            this.removeChip(col);
         }
 
         const maxScore = Math.max(...moves.map(move => move.score));
@@ -203,12 +203,6 @@ class Board {
 
     isFull() {
         return this.board.every(column => column[0] !== null);
-    }
-
-    render() {
-        return this.board[0].map((_, rowIndex) =>
-            this.board.map(column => column[rowIndex] || " ").join("|")
-        ).join("\n");
     }
 }
 const cols = 7;
@@ -309,7 +303,7 @@ function playerMove(col) {
         return;
     }
 
-    if (!board.columnFree(col)) {
+    if (!board.isColumnFree(col)) {
         updateGameInfo('Столбец заполнен, выберите другой.');
         return;
     }
@@ -318,7 +312,7 @@ function playerMove(col) {
 
     lockControls();
 
-    board.dropCoin(1, col);
+    board.dropChip(1, col);
     renderBoard();
 
     if (board.getWinner() === 1) {
@@ -349,8 +343,8 @@ function aiMove() {
 
     lockControls();
 
-    const col = board.bestMove(2, AIdifficulty);
-    board.dropCoin(2, col);
+    const col = board.calculateBestMove(2, AIdifficulty);
+    board.dropChip(2, col);
     renderBoard();
 
     console.log(board.getWinner())
@@ -376,7 +370,7 @@ function aiMove() {
 
     if (hintButton.classList.contains('active')) {
         setTimeout(() => {
-            const bestMoveCol = board.bestMove(1, 6);
+            const bestMoveCol = board.calculateBestMove(1, 6);
             highlightBestMove(bestMoveCol);
         }, 200);
     }
@@ -445,7 +439,7 @@ function toggleHint() {
         return;
     }
     setTimeout(() => {
-        const bestMoveCol = board.bestMove(1, 6);
+        const bestMoveCol = board.calculateBestMove(1, 6);
         highlightBestMove(bestMoveCol);
     }, 100);
 }
