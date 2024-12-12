@@ -5,7 +5,7 @@ class Board {
         this.rows = rows;
         this.board = Array.from({ length: cols }, () => Array(rows).fill(null));
         this.winner = null;
-        this.changed = true;
+        this.is_changed = true;
         this.winningCells = [];
     }
 
@@ -17,7 +17,7 @@ class Board {
         for (let row = this.rows - 1; row >= 0; row--) {
             if (this.board[column][row] === null) {
                 this.board[column][row] = playerId;
-                this.changed = true;
+                this.is_changed = true;
                 return true;
             }
         }
@@ -28,7 +28,7 @@ class Board {
         for (let row = 0; row < this.rows; row++) {
             if (this.board[column][row] !== null) {
                 this.board[column][row] = null;
-                this.changed = true;
+                this.is_changed = true;
                 return true;
             }
         }
@@ -149,11 +149,11 @@ class Board {
     }
 
     getWinner() {
-        if (!this.changed) {
+        if (!this.is_changed) {
             return this.winner;
         }
 
-        this.changed = false;
+        this.is_changed = false;
         this.winningCells = [];
 
         for (let col = 0; col < this.cols; col++) {
@@ -379,7 +379,7 @@ function aiMove() {
 function restartGame() {
     board.board = Array.from({ length: cols }, () => Array(rows).fill(null));
     board.winner = null;
-    board.changed = true;
+    board.is_changed = true;
     board.winningCells = [];
 
     isGameActive = true;
