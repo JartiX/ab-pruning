@@ -1,0 +1,228 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background: linear-gradient(135deg, #87CEEB, #4682B4);
+    color: #fff;
+    overflow: hidden;
+}
+
+.game-container {
+    width: 480px;
+    height: 673px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 800px;
+    margin: 50px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 60px);
+    gap: 5px;
+    background: #2E3B55;
+    padding: 15px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    margin-bottom: 30px;
+}
+
+
+.cell {
+    width: 60px;
+    height: 60px;
+    background-color: #f4f4f4;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.cell:hover {
+    transform: scale(1.1);
+}
+
+.cell.player1 {
+    background: radial-gradient(circle, rgba(255, 0, 0, 1) 0%, rgba(139, 0, 0, 1) 100%);
+}
+
+.cell.player2 {
+    background: radial-gradient(circle, rgba(255, 255, 0, 1) 0%, rgba(204, 204, 0, 1) 100%);
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.controls button {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    width: 50px;
+    height: 50px;
+    font-size: 1rem;
+    background: #4CAF50;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease;
+}
+
+.controls button:hover {
+    background: #45a049;
+    transform: scale(1.1);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
+}
+
+.controls button:active {
+    transform: scale(0.9);
+}
+
+.cell.win {
+    box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.8);
+    animation: glow 1s infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    to {
+        box-shadow: 0 0 20px rgba(255, 255, 255, 1);
+    }
+}
+
+.game-info {
+    width: 100%;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #fff;
+    position: relative;
+}
+
+.game-info .current-turn {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #FFD700;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.current-turn {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.game-info .game-result {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #32CD32;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+}
+
+.game-alert {
+    position: absolute;
+    margin-top: 20px;
+    font-size: 1.3rem;
+    color: #FF6347;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
+    width: 100%;
+    top: 80%;
+}
+
+button:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+}
+
+.restart-button {
+    left: 0%;
+}
+
+.hint-container {
+    right: 0%;
+    cursor: pointer;
+}
+.hint-container:hover {
+    background-color: #45a049;
+}
+
+.hint-container label,
+.hint-container input {
+    cursor: pointer;
+}
+
+.restart-button,
+.hint-container {
+    top: -20%;
+    position: absolute;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.restart-button:hover {
+    background-color: #45a049;
+}
+
+.difficulty-controls {
+    margin-top: 10px;
+}
+
+.difficulty-button {
+    background-color: #008CBA;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
+    border-radius: 5px;
+}
+
+.difficulty-button:hover {
+    background-color: #007bb5;
+}
+button.highlighted {
+    font-weight: bold;
+    animation: scaleUp 0.7s ease-in-out infinite alternate, glow 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes scaleUp {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.2);
+    }
+}

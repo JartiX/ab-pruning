@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-info">
+            <button class="restart-button">Перезапустить</button>
+            <div class="current-turn">Ваш ход</div>
+            <div class="game-result"></div>
+            <div class="game-alert"></div>
+            <div class="difficulty-controls">
+                <button class="difficulty-button" data-difficulty="easy">Легко</button>
+                <button class="difficulty-button" data-difficulty="medium">Средне</button>
+                <button class="difficulty-button" data-difficulty="hard">Сложно</button>
+            </div>
+            <div class="hint-container" onclick="toggleHint()">
+                Подсказки
+            </div>
+        </div>
+        <div class="controls"></div>
+        <div class="board"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
