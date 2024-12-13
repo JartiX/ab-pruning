@@ -109,7 +109,7 @@ class Board {
 
     minimax(depth, playerId, maximizingPlayer, alpha, beta) {
         const opponentId = playerId === 1 ? 2 : 1;
-
+        
         // Хорошо награждаем если находим выигрышный ход
         if (this.getWinner() === playerId) {
             return (depth + 1) * 20000;

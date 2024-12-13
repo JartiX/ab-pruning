@@ -1,6 +1,17 @@
+let winSound = new Audio('sounds/win.mp3')
+let loseSound = new Audio('sounds/lose.mp3')
+let chipSound = new Audio('sounds/chip.mp3')
+let clickSound = new Audio('sounds/click.mp3')
+
+winSound.volume = 0.04;
+loseSound.volume = 0.04;
+chipSound.volume = 0.04;
+clickSound.volume = 0.04;
+
 const cols = 7;
 const rows = 6;
-const board = new Board(cols, rows);
+let board = new Board(cols, rows);
+
 const boardElement = document.querySelector('.board');
 const controlsElement = document.querySelector('.controls');
 const gameInfoElement = document.querySelector('.current-turn');
@@ -12,6 +23,11 @@ const hintButton = document.querySelector('.hint-container');
 let currentPlayer = 1;
 let isGameActive = true;
 let AIdifficulty = 4;
+
+function playSound(sound) {
+    sound.currentTime = 0;
+    sound.play();
+}
 
 function renderBoard() {
     boardElement.style.setProperty('--cols', cols);
@@ -52,7 +68,10 @@ function renderControls() {
     for (let col = 0; col < cols; col++) {
         const button = document.createElement('button');
         button.textContent = col + 1;
-        button.onclick = () => playerMove(col);
+        button.onclick = () => {
+            playSound(clickSound);
+            playerMove(col);
+        };
         controlsElement.appendChild(button);
     }
 }
@@ -103,12 +122,15 @@ function playerMove(col) {
 
     clearHighlight();
 
+    playSound(chipSound);
+
     lockControls();
 
     board.dropChip(1, col);
     renderBoard();
 
     if (board.getWinner() === 1) {
+        playSound(winSound);
         updateGameResult('Вы победили!');
         isGameActive = false;
         animateWin();
@@ -139,9 +161,10 @@ function aiMove() {
     const col = board.calculateBestMove(2, AIdifficulty);
     board.dropChip(2, col);
     renderBoard();
+    playSound(chipSound);
 
-    console.log(board.getWinner())
     if (board.getWinner() === 2) {
+        playSound(loseSound);
         updateGameResult('ИИ победил!');
         isGameActive = false;
         animateWin();
@@ -170,10 +193,7 @@ function aiMove() {
 }
 
 function restartGame() {
-    board.board = Array.from({ length: cols }, () => Array(rows).fill(null));
-    board.winner = null;
-    board.is_changed = true;
-    board.winningCells = [];
+    board = new Board(cols, rows);
 
     isGameActive = true;
     currentPlayer = 1;
@@ -187,10 +207,16 @@ function restartGame() {
     gameAlertElement.innerHTML = '';
 }
 
-document.querySelector('.restart-button').addEventListener('click', restartGame);
+document.querySelector('.restart-button').addEventListener('click', (event) => { 
+    restartGame();
+    playSound(clickSound);
+    }
+);
+    
 
 document.querySelectorAll('.difficulty-button').forEach(button => {
     button.addEventListener('click', (event) => {
+        playSound(clickSound);
         const selectedDifficulty = event.target.getAttribute('data-difficulty');
         switch (selectedDifficulty) {
             case 'easy':
@@ -226,6 +252,7 @@ function clearHighlight() {
 }
 
 function toggleHint() {
+    playSound(clickSound);
     hintButton.classList.toggle('active');
     if (!hintButton.classList.contains('active')) {
         clearHighlight();
