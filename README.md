@@ -75,8 +75,8 @@
 ## Демонстрация
 **JS**:
 
-![](./images/JS demonstration.png)
+![JS](images/JS_demonstration.png)
 
 **Python**:
 
-![](./images/Python demonstration.png)
+![Python](./images/Python_demonstration.png)
