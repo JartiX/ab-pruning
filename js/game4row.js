@@ -104,6 +104,14 @@ class Board {
         for (const seqType of ["horizontal", "vertical", "diagonal", "reverse_diagonal"]) {
             score += this.rateSequences(playerId, seqType);
         }
+
+        const centerCol = Math.floor(this.cols / 2);
+        
+        for (let row = 0; row < this.rows; row++) {
+            if (this.board[centerCol][row] === playerId) {
+                score += 5;
+            }
+        }
         return score;
     }
 
@@ -112,11 +120,11 @@ class Board {
         
         // Хорошо награждаем если находим выигрышный ход
         if (this.getWinner() === playerId) {
-            return (depth + 1) * 20000;
+            return (depth + 1) * 30000;
         }
         // Штрафуем если противник одержит победу
         if (this.getWinner() === opponentId) {
-            return -(depth + 1) * 20000;
+            return -(depth + 1) * 30000;
         }
         if (this.isFull()) {
             return 0;
